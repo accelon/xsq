@@ -2,11 +2,8 @@ import {nodefs,writeChanged,readTextContent, fromChineseNumber, toBase26} from '
 await nodefs; //export fs to global
 import {tidyraw} from './tidyraw.js'
 
-
 const lines=tidyraw(readTextContent('xsq-raw.txt')).replace(/\n\n/g,'\n').split(/\n/);
-
-
-
+const prefix=process.argv[2]||'dn'
 import {yhptsmap} from './yhpts.js'
 const dnmap=yhptsmap();
 
@@ -50,11 +47,12 @@ const writeVolumn=(v)=>{
     emitNote();
     out.push(paragraph);
     paragraph='';
-    if (v[0]=='a') {
+    if (v.startsWith(prefix)) {
         while(out.length && !out[0].trim()) out.shift();
         out[0]='^bk#'+v+out[0];
-        writeChanged('off/'+v+'.xsq-ori.off',tidybody(out),true);
-        writeChanged('off/'+v+'-footnote.tsv', tidyfootnote(footnotes),true);        
+        writeChanged('off-ori/'+v+'.xsq.off',tidybody(out),true);
+        const footnoteheader=':<name='+v+'-fn preload=true>\tnote'
+        writeChanged('off-ori/'+v+'.xsq.tsv', footnoteheader+'\n'+tidyfootnote(footnotes),true); 
     }
     footnotes.length=0;
     out.length=0;
@@ -64,7 +62,12 @@ const footnotes=[];
 let paragraph='',noteparagraph='',notesection=false,fn='';
 const emitNote=()=>{
     if (fnpage && noteparagraph) {
-        footnotes.push([page,ck,noteparagraph]);
+        const f=parseInt(noteparagraph);
+        if (!f) {
+            console.log('wrong foot note',noteparagraph)
+        }
+        //footnotes.push([page,ck,noteparagraph]);
+        footnotes.push(page+'\t'+ck+'\t'+f+'\t'+noteparagraph.replace(f,'').trim())
         noteparagraph='';    
     }
 }

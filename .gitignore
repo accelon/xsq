@@ -2,4 +2,5 @@
 *.7z
 *.zip
 *.pdf
-*.tsv
+sent.tsv
+*.ptk
